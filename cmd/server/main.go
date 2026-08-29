@@ -1,7 +1,7 @@
 package main
 
 import (
-	"net/http"
+	"awesomeProject/internal/delivery/http"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/gin-gonic/gin"
@@ -9,11 +9,7 @@ import (
 
 func main() {
 	r := gin.Default()
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "pong",
-		})
-	})
+	r.POST("/", http.Shorten)
 
-	r.Run("0.0.0.0:8080")
+	r.Run("0.0.0.0:8081")
 }
