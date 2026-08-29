@@ -1,14 +1,13 @@
 package service
 
 import (
-	"context"
 	"crypto/md5"
 	"math/big"
 )
 
 const alphabet = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
-func Hash(ctx context.Context, url string) string {
+func Hash(url string) string {
 	hasher := md5.New()
 	hasher.Write([]byte(url))
 	hashBytes := hasher.Sum(nil)
@@ -24,8 +23,6 @@ func Hash(ctx context.Context, url string) string {
 		num.DivMod(&num, base, rem)
 		result[i] = alphabet[rem.Int64()]
 	}
-
-	// запись в бд
 
 	return string(result)
 }

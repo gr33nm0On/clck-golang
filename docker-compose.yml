@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    environment:
+      - PGHOST=postgres_db
+      - PGPORT=5432
+      - PGUSER=test
+      - PGPASSWORD=test
+      - PGDATABASE=db
+    depends_on:
+      - postgres_db
+
+  postgres_db:
+    image: postgres:15
+    environment:
+      - POSTGRES_USER=test
+      - POSTGRES_PASSWORD=test
+      - POSTGRES_DB=db
