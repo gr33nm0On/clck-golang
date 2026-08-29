@@ -21,7 +21,10 @@ func main() {
 
 	r.POST("/", http.GetShortenHandler(context.Background(), pool))
 
-	r.Run("0.0.0.0:8081")
+	err = r.Run("0.0.0.0:8081")
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	defer pool.Close()
 }
