@@ -25,7 +25,23 @@ func ConnectDB(ctx context.Context) *pgxpool.Pool {
 	return pool
 }
 
-func Save(ctx context.Context, pool *pgxpool.Pool, origin_url string, short_url string) {
+func InitDB(ctx context.Context, pool *pgxpool.Pool) error {
+	initCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	query := `
+	CREATE TABLE IF NOT EXISTS urls (
+	    id serial PRIMARY KEY,
+	    origin_url text NOT NULL UNIQUE,
+	    urlHash text NOT NULL UNIQUE
+	)
+	`
+
+	_, err := pool.Exec(initCtx, query)
+	return err
+}
+
+func Save(ctx context.Context, pool *pgxpool.Pool, origin_url string, urlHash string) {
 	var url string
 
 	err := pool.QueryRow(ctx, "SELECT origin_url FROM urls WHERE origin_url = $1", origin_url).Scan(&url)
@@ -40,30 +56,31 @@ func Save(ctx context.Context, pool *pgxpool.Pool, origin_url string, short_url 
 	}
 
 	_, err = pool.Exec(ctx, `
-			INSERT INTO urls (origin_url, short_url) 
+			INSERT INTO urls (origin_url, urlHash) 
 			VALUES ($1, $2)
 			ON CONFLICT (origin_url) 
 			DO UPDATE SET origin_url = EXCLUDED.origin_url
-			RETURNING short_url;
-		`, origin_url, short_url)
+			RETURNING urlHash;
+		`, origin_url, urlHash)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 }
 
-func InitDB(ctx context.Context, pool *pgxpool.Pool) error {
-	initCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
+func FindURL(ctx context.Context, pool *pgxpool.Pool, urlHash string) (string, error) {
+	var url string
 
-	query := `
-	CREATE TABLE IF NOT EXISTS urls (
-	    id serial PRIMARY KEY,
-	    origin_url text NOT NULL UNIQUE,
-	    short_url text NOT NULL UNIQUE
-	)
-	`
+	err := pool.QueryRow(ctx, `
+		SELECT origin_url FROM urls WHERE urlHash = $1
+	`, urlHash).Scan(&url)
 
-	_, err := pool.Exec(initCtx, query)
-	return err
+	if err != nil {
+		if !errors.Is(err, pgx.ErrNoRows) {
+			log.Fatal(err)
+		}
+		return "", err
+	}
+
+	return url, nil
 }

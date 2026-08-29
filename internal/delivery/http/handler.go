@@ -5,6 +5,7 @@ import (
 	"awesomeProject/internal/service"
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -29,10 +30,28 @@ func GetShortenHandler(ctx context.Context, pool *pgxpool.Pool) gin.HandlerFunc 
 
 		shortenUrl := fmt.Sprintf("%s://%s/%s", scheme, host, hash)
 
-		repository.Save(ctx, pool, url, shortenUrl)
+		repository.Save(ctx, pool, url, hash)
 
 		c.JSON(http.StatusOK, gin.H{
 			"short_url": shortenUrl,
 		})
+	}
+}
+
+func GetRedirectHandler(ctx context.Context, pool *pgxpool.Pool) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		hashUrl := c.Param("hashUrl")
+
+		log.Println("hashUrl:", hashUrl)
+
+		url, err := repository.FindURL(ctx, pool, hashUrl)
+		log.Println("url:", url)
+		log.Println("err:", err)
+
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		}
+
+		c.Redirect(http.StatusFound, url)
 	}
 }

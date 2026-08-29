@@ -20,6 +20,7 @@ func main() {
 	}
 
 	r.POST("/", http.GetShortenHandler(context.Background(), pool))
+	r.GET("/:hashUrl", http.GetRedirectHandler(context.Background(), pool))
 
 	err = r.Run("0.0.0.0:8081")
 	if err != nil {

@@ -1,6 +1,8 @@
 services:
   app:
     build: .
+    ports:
+      - "8081:8081"
     environment:
       - PGHOST=postgres_db
       - PGPORT=5432
